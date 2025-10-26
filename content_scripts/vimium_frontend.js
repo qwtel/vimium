@@ -422,12 +422,23 @@ async function checkIfEnabledForUrl() {
   }
   const [response, ...unused] = await Promise.all(promises);
 
+  Utils.debugLog(
+    "frontend.js: checkIfEnabledForUrl:%o",
+    response,
+  );
+
+  if (!response) {
+    throw new Error("Failed to initialize frame, no response from background page");
+  }
+
   isEnabledForUrl = response.isEnabledForUrl;
 
   // This browser info is used by other content scripts, but can only be determinted by the
   // background page.
   Utils._isFirefox = response.isFirefox;
+  Utils._isSafari = response.isSafari;
   Utils._firefoxVersion = response.firefoxVersion;
+  Utils._safariVersion = response.safariVersion;
   Utils._browserInfoLoaded = true;
   // This is the first time we learn what this frame's ID is.
   globalThis.frameId = response.frameId;

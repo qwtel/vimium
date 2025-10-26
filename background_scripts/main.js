@@ -9,7 +9,6 @@ import * as exclusions from "../background_scripts/exclusions.js";
 import "../background_scripts/completion_engines.js";
 import "../background_scripts/completion_search.js";
 import "../background_scripts/completion.js";
-import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
 
 import {
@@ -37,9 +36,11 @@ globalThis.tabLoadedHandlers = {}; // tabId -> function()
 
 // A Vimium secret, available only within the current browser session. The secret is a generated
 // strong random string.
-const randomArray = globalThis.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
-const secretToken = randomArray.reduce((a, b) => a.toString(16) + b.toString(16));
-chrome.storage.session.set({ vimiumSecret: secretToken });
+if (!bgUtils.isSafari()) {
+  const randomArray = globalThis.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
+  const secretToken = randomArray.reduce((a, b) => a.toString(16) + b.toString(16));
+  chrome.storage.session.set({ vimiumSecret: secretToken });
+}
 
 const completionSources = {
   bookmarks: new BookmarkCompleter(),
@@ -84,8 +85,10 @@ function onURLChange(details) {
 // Re-check whether Vimium is enabled for a frame when the URL changes without a reload.
 // There's no reliable way to detect when the URL has changed in the content script, so we
 // have to use the webNavigation API in our background script.
-chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
-chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
+if (!bgUtils.isSafari()) {
+  chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
+  chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
+}
 
 if (!globalThis.isUnitTests) {
   // Cache "content_scripts/vimium.css" in chrome.storage.session for UI components.
@@ -626,7 +629,13 @@ const sendRequestHandlers = {
 
   launchSearchQuery({ query, openInNewTab }) {
     const disposition = openInNewTab ? "NEW_TAB" : "CURRENT_TAB";
-    chrome.search.query({ disposition, text: query });
+    if (bgUtils.isSafari()) {
+      // Safari doesn't support chrome.search.query API, so fallback to opening search URL
+      const searchUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
+      chrome.tabs.create({ url: searchUrl, active: disposition === "NEW_TAB" });
+    } else {
+      chrome.search.query({ disposition, text: query });
+    }
   },
 
   domReady(_, sender) {
@@ -701,7 +710,9 @@ const sendRequestHandlers = {
 
     const response = Object.assign({
       isFirefox: bgUtils.isFirefox(),
-      firefoxVersion: await bgUtils.getFirefoxVersion(),
+      fireFoxVersion: null, // await bgUtils.getFirefoxVersion(),
+      isSafari: bgUtils.isSafari(),
+      safariVersion: null, // await bgUtils.getSafariVersion(),
       frameId: sender.frameId,
     }, enabledState);
 
@@ -711,7 +722,9 @@ const sendRequestHandlers = {
   async getBrowserInfo() {
     return {
       isFirefox: bgUtils.isFirefox(),
-      firefoxVersion: await bgUtils.getFirefoxVersion(),
+      firefoxVersion: null, // await bgUtils.getFirefoxVersion(),
+      isSafari: bgUtils.isSafari(),
+      safariVersion: null, // await bgUtils.getSafariVersion(),
     };
   },
 

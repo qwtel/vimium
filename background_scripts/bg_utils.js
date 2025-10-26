@@ -13,6 +13,14 @@ export function isFirefox() {
     : false;
 }
 
+let _isSafari;
+export function isSafari() {
+  // Safari WebExtensions use the browser namespace but with different runtime URL
+  return _isSafari ?? (globalThis.browser
+    ? browser.runtime.getURL("").startsWith("safari")
+    : false);
+}
+
 export async function getFirefoxVersion() {
   return globalThis.browser ? (await browser.runtime.getBrowserInfo()).version : null;
 }
