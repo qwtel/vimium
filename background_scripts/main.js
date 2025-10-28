@@ -98,7 +98,12 @@ function onURLChange(details) {
 // Re-check whether Vimium is enabled for a frame when the URL changes without a reload.
 // There's no reliable way to detect when the URL has changed in the content script, so we
 // have to use the webNavigation API in our background script.
-if (!bgUtils.isSafari()) {
+// FIXME: Safari doesn't support the webNavigation API.
+if (
+  'webNavigation' in chrome && 
+  'onHistoryStateUpdated' in chrome.webNavigation && 
+  'onReferenceFragmentUpdated' in chrome.webNavigation
+) {
   chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
   chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
 }
