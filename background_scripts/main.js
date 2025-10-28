@@ -27,6 +27,19 @@ import {
 
 import * as TabOperations from "./tab_operations.js";
 
+// Safari doesn't support chrome.search.query API, so we provide a fallback implementation.
+globalThis.searchQuery = !('search' in chrome) || !('query' in chrome.search)
+  ? ({ disposition, text, tabId }) => {
+    // FIXME: make this configurable
+    const searchUrl = `https://search.brave.com/search?q=${encodeURIComponent(text)}`;
+    if (tabId) {
+      chrome.tabs.update(tabId, { url: searchUrl });
+    } else {
+      chrome.tabs.create({ url: searchUrl, active: disposition === "NEW_TAB" });
+    }
+  }
+  : (...args) => chrome.search.query(...args);
+
 // Allow Vimium's content scripts to access chrome.storage.session. Otherwise,
 // chrome.storage.session will be null in content scripts.
 chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
@@ -629,13 +642,7 @@ const sendRequestHandlers = {
 
   launchSearchQuery({ query, openInNewTab }) {
     const disposition = openInNewTab ? "NEW_TAB" : "CURRENT_TAB";
-    if (bgUtils.isSafari()) {
-      // Safari doesn't support chrome.search.query API, so fallback to opening search URL
-      const searchUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
-      chrome.tabs.create({ url: searchUrl, active: disposition === "NEW_TAB" });
-    } else {
-      chrome.search.query({ disposition, text: query });
-    }
+    globalThis.searchQuery({ disposition, text: query });
   },
 
   domReady(_, sender) {

@@ -13,13 +13,7 @@ export async function openUrlInCurrentTab(request) {
   const urlStr = await UrlUtils.convertToUrl(request.url);
   if (urlStr == null) {
     // The requested destination is not a URL, so treat it like a search query.
-    if (bgUtils.isSafari()) {
-      // Safari doesn't support chrome.search.query API, so fallback to opening search URL
-      const searchUrl = `https://search.brave.com/search?q=${encodeURIComponent(request.url)}`;
-      chrome.tabs.update(request.tabId, { url: searchUrl });
-    } else {
-      chrome.search.query({ text: request.url });
-    }
+    globalThis.searchQuery({ text: request.url });
   } else if (UrlUtils.hasJavascriptProtocol(urlStr)) {
     // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
     // (like github.com, developer.mozilla.org) will raise an error when we try to run this code.
@@ -97,15 +91,7 @@ export async function openUrlInNewTab(request) {
     tabConfig.url = bgUtils.isFirefox() ? null : "data:text/html,<html></html>";
     newTab = await chrome.tabs.create(tabConfig);
     const query = request.url;
-    
-    // Safari doesn't support chrome.search.query API, so fallback to opening search URL
-    if (bgUtils.isSafari()) {
-      // Use Google search as fallback for Safari
-      const searchUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
-      await chrome.tabs.update(newTab.id, { url: searchUrl });
-    } else {
-      await chrome.search.query({ text: query, tabId: newTab.id });
-    }
+    await globalThis.searchQuery({ text: query, tabId: newTab.id });
   } else {
     // The requested destination is a regular URL.
     if (urlStr != chromeNewTabUrl) {
