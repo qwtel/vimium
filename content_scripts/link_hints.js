@@ -75,20 +75,56 @@ const OPEN_IN_CURRENT_TAB = {
   name: "curr-tab",
   indicator: "Open link in current tab",
 };
+
+const kSkip = Symbol("skip");
+
 const OPEN_IN_NEW_BG_TAB = {
   name: "bg-tab",
   indicator: "Open link in new tab",
   clickModifiers: { metaKey: isMac, ctrlKey: !isMac },
+  linkActivator: (link) => {
+    if (Utils.isSafari()) {
+      chrome.runtime.sendMessage({
+        handler: "openUrlInNewTab",
+        url: link.href,
+        active: false
+      });
+    } else {
+      return kSkip;
+    }
+  }
 };
 const OPEN_IN_NEW_FG_TAB = {
   name: "fg-tab",
   indicator: "Open link in new tab and switch to it",
   clickModifiers: { shiftKey: true, metaKey: isMac, ctrlKey: !isMac },
+  linkActivator: (link) => {
+    if (Utils.isSafari()) {
+      chrome.runtime.sendMessage({
+        handler: "openUrlInNewTab",
+        url: link.href,
+        active: true
+      });
+    } else {
+      return kSkip;
+    }
+  }
 };
 const OPEN_WITH_QUEUE = {
   name: "queue",
   indicator: "Open multiple links in new tabs",
   clickModifiers: { metaKey: isMac, ctrlKey: !isMac },
+  linkActivator: (link) => {
+    if (Utils.isSafari()) {
+      chrome.runtime.sendMessage({
+        handler: "openUrlInNewTab",
+        url: link.href,
+        active: false
+      });
+    } else {
+      return kSkip;
+    }
+  }
 };
 const COPY_LINK_URL = {
   name: "link",
@@ -731,7 +767,12 @@ class LinkHintsMode {
               clickEl.focus();
             }
             HintCoordinator.lastClickedElementRef = new WeakRef(clickEl);
-            return linkActivator(clickEl);
+            const res = linkActivator(clickEl);
+            if (res === kSkip) {
+              return clickActivator(this.mode.clickModifiers)(clickEl);
+            } else {
+              return res;
+            }
           }
         }
       });
