@@ -260,7 +260,7 @@ iframe.vimium-non-clickable {
   /* Dark mode CSS for options page and exclusions */
 
   body.vimium-body {
-    background-color: var(--vimium-background-color);
+    background: transparent;
     color: var(--vimium-background-text-color);
   }
 
