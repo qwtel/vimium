@@ -1,3 +1,19 @@
+2.4.1 (2026-03-07)
+
+- Fix issue where existing users were mistakenly opted-in to
+  [Vimium's new tab page](https://github.com/philc/vimium/pull/4795) for the `createTab` command.
+  (https://github.com/philc/vimium/issues/4859)
+- Fix exclusion rules is empty in downloaded backups. (https://github.com/philc/vimium/issues/4839)
+
+2.4.0 (2026-01-27)
+
+- Support a Vimium new tab experience: the browser can be configured to open a blank Vimium page as
+  the new tab page. In Vimium's settings, the Vomnibar can configured to open on new tabs. See
+  [instructions](https://github.com/philc/vimium?tab=readme-ov-file#how-to-allow-vimium-to-work-on-new-tab-pages).
+  (https://github.com/philc/vimium/pull/4795)
+- Make Google search result links work on sub-tabs like "Web".
+  (https://github.com/philc/vimium/issues/4750)
+
 2.3.1 (2025-11-12)
 
 - Fix Vimium to work with Chrome 144. (https://github.com/philc/vimium/issues/4785)
@@ -9,8 +25,8 @@
   commands.
 - Some internal CSS classes were changed for Vimium's UI. This may affect those who have customized
   Vimium's CSS via the options page. (https://github.com/philc/vimium/issues/4668)
-- Breaking change: when creating a mapping for `setZoom`, a `level` argument is now required.
-  E.g.: `map z2 setZoom level=2.0`.
+- Breaking change: when creating a mapping for `setZoom`, a `level` argument is now required. E.g.:
+  `map z2 setZoom level=2.0`.
 - Make `Vomnibar.activateBookmark` accept a `query` option.
   (https://github.com/philc/vimium/pull/4591)
 - Fix `openCopiedUrlInCurrentTab` doesn't launch search queries.
