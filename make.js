@@ -95,7 +95,7 @@ async function checkForBuildIssues() {
   // Ensure the version number is properly formed.
   const chromeManifest = await parseManifestFile();
   const version = chromeManifest["version"];
-  const versionRegexp = /^\d\.\d+\.\d+$/;
+  const versionRegexp = /^\d+\.\d+\.\d+$/;
   if (!versionRegexp.test(version)) {
     throw new Error(`The version string "${version}" is malformed.`);
   }
@@ -180,6 +180,10 @@ async function buildStorePackage() {
     "-c",
     `${zipCommand} ../chrome-canary/vimium-canary-${version}.zip .`,
   ]);
+
+  // Leave the unpacked build in its production (Chrome Store) form. This directory is also useful
+  // as input to platform-specific packaging tools such as Safari's extension converter.
+  await writeDistManifest(chromeManifest);
 }
 
 async function runUnitTests() {
